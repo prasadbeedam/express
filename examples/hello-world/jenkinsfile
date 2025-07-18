@@ -34,18 +34,11 @@ pipeline {
             steps {
                 dir('examples/hello-world') {
                     sh "docker build -t $IMAGE_NAME ."
+                    sh "docker push $IMAGE_NAME"
                 }
             }
         }
 
-        stage('Deploy to Staging') {
-            steps {
-                script {
-                    sh "docker rm -f $CONTAINER_NAME || true"
-                    sh "docker run -d --name $CONTAINER_NAME -p $PORT:8080 $IMAGE_NAME"
-                }
-            }
-        }
 
         stage('Health Check') {
             steps {
