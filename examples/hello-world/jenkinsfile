@@ -1,78 +1,11 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKERHUB_USER = "prasadyadav99"
-        IMAGE_NAME = "hello-world-app"
-        CONTAINER_NAME = "hello-staging"
-        PORT = "8080"
-    }
-
     stages {
-        stage('Checkout Code') {
+        stage('Build') {
             steps {
-                git branch: 'main', url: 'https://github.com/prasadbeedam/express.git'
+                echo 'Hello, Jenkins!'
             }
-        }
-
-        stage('Read Version') {
-            steps {
-                script {
-                    def version = sh(script: "jq -r .version package.json", returnStdout: true).trim()
-                    env.APP_VERSION = version
-                    echo "Version: ${env.APP_VERSION}"
-                }
-            }
-        }
-
-        stage('Install Dependencies') {
-            steps {
-                dir('examples/hello-world') {
-                    sh 'npm install'
-                }
-            }
-        }
-
-        stage('Run Tests') {
-            steps {
-                dir('examples/hello-world') {
-                    sh 'npm test || true'
-                }
-            }
-        }
-
-        stage('Build & Push Docker Image') {
-            steps {
-                dir('examples/hello-world') {
-                    sh "docker build -t $DOCKERHUB_USER/$IMAGE_NAME:$APP_VERSION ."
-                    sh "docker push $DOCKERHUB_USER/$IMAGE_NAME:$APP_VERSION"
-                }
-            }
-        }
-
-        stage('Run Container') {
-            steps {
-                sh "docker run -d --rm -p $PORT:$PORT --name $CONTAINER_NAME $DOCKERHUB_USER/$IMAGE_NAME:$APP_VERSION"
-            }
-        }
-
-        stage('Health Check') {
-            steps {
-                sh "sleep 5"
-                sh "curl --fail http://localhost:$PORT || exit 1"
-            }
-        }
-    }
-
-    post {
-        always {
-            sh "docker stop $CONTAINER_NAME || true"
-        }
-        success {
-            echo "✅ Deployed successfully!"
-        }
-        failure {
-            echo "❌ Pipeline failed. Investigate logs."
         }
     }
 }
