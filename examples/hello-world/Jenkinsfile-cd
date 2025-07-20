@@ -37,9 +37,9 @@ pipeline {
                         sh """
                             sed -i 's|image: .*|image: ${imageTag}|' deployment.yaml
                             cat deployment.yaml
-                            export KUBECONFIG=${KUBECONFIG}
+                            export KUBECONFIG=/home/ec2-user/.kube/config
                             kubectl version --client
-                            kubectl apply -n ${NAMESPACE} -f deployment.yaml
+                            kubectl apply -n ${env.NAMESPACE} -f deployment.yaml
                         """
                     }
                 }
