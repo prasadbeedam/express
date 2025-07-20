@@ -48,6 +48,7 @@ pipeline {
                 dir("${APP_DIR}") {
                     sh "git checkout main"
                     sh "ls -ltr"
+                    sh "kubectl version --client"
                     echo "🚀 Deploying to namespace ${NAMESPACE}"
                     sh "kubectl apply -n ${NAMESPACE} -f deployment.yaml"
                 }
