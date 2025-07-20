@@ -90,27 +90,7 @@ pipeline {
                         """
                     }
 
-                    echo "✅ Image pushed: ${env.FULL_IMAGE_NAME}"
-                }
-            }
-        }
-
-        stage('Deploy to EKS') {
-            steps {
-                dir("${APP_DIR}") {
-                    script {
-                        echo "📄 Updating image in deployment.yaml..."
-                        sh "sed -i 's|image: .*|image: ${env.FULL_IMAGE_NAME}|' deployment.yaml"
-
-                        echo '🚀 Deploying to EKS...'
-                        sh "kubectl apply -f deployment.yaml"
-
-                        echo '🔄 Waiting for rollout...'
-                        sh "kubectl rollout status deployment/hello-world-deployment"
-
-                        echo '🔗 Service Details:'
-                        sh "kubectl get svc hello-world-service"
-                    }
+                    echo "✅ Image successfully pushed: ${env.FULL_IMAGE_NAME}"
                 }
             }
         }
