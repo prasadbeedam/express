@@ -6,7 +6,6 @@ pipeline {
     environment {
         APP_DIR = "examples/hello-world"
         IMAGE_NAME = "hello-world-app"
-        IMAGE_TAG = "" // Will be dynamically set later
     }
 
     stages {
@@ -32,8 +31,11 @@ pipeline {
                         def packageJson = readJSON file: 'package.json'
                         def appVersion = packageJson.version
                         echo "📦 Application version: ${appVersion}"
+
+                        // Save it to a global variable using currentBuild
+                        currentBuild.displayName = "v${appVersion}"
+                        // Save to env manually
                         env.IMAGE_TAG = "${IMAGE_NAME}:${appVersion}"
-                        echo "🔖 Image tag: ${env.IMAGE_TAG}"
                     }
                 }
             }
@@ -42,6 +44,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 dir("${APP_DIR}") {
+                    echo "Building image: ${env.IMAGE_TAG}"
                     sh "docker build -t ${env.IMAGE_TAG} ."
                 }
             }
