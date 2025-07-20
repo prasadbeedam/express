@@ -15,20 +15,15 @@ pipeline {
                 sh  "ls -ltr"
             }
         }
-
-        stage('Read Version') {
-            steps {
-                script {
-                    def pkgJson = readFile("./package.json")
-                    def version = new groovy.json.JsonSlurper().parseText(pkgJson).version
-                    env.VERSION = version
-                    env.IMAGE_TAG = "${IMAGE_NAME}:${VERSION}"
-                    echo "📦 Detected version: ${VERSION}"
-                    echo "📸 Docker Image Tag: ${IMAGE_TAG}"
+        stage('read the version'){
+            steps{
+                script{
+                    def packageJson = readJSON file: 'package.json'
+                    appVersion = packageJson.version
+                    echo "application version: $appVersion"
                 }
             }
         }
-
         stage('Build Docker Image') {
             steps {
                 dir("${APP_DIR}") {
