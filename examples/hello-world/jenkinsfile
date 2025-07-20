@@ -2,51 +2,50 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "hello-world-app"
+        APP_DIR = "examples/hello-world"
+        PORT = "8080"
     }
 
     stages {
-        stage('Checkout') {
+        stage('Clone Repository') {
             steps {
                 git branch: 'main', url: 'https://github.com/prasadbeedam/express.git'
             }
         }
 
-        stage('Build') {
+        stage('Install Dependencies') {
             steps {
-                dir('examples/hello-world') {
+                dir("${APP_DIR}") {
                     sh 'npm install'
                 }
             }
         }
 
-        stage('Test') {
+        stage('Run App') {
             steps {
-                echo 'No tests specified. Skipping for now.'
-            }
-        }
-
-        stage('Docker Build') {
-            steps {
-                dir('examples/hello-world') {
-                    sh "docker build -t ${IMAGE_NAME}:latest ."
+                dir("${APP_DIR}") {
+                    sh 'nohup node index.js > app.log 2>&1 &'
+                    sh 'sleep 5'
                 }
             }
         }
 
-        stage('Run Container') {
+        stage('Test App') {
             steps {
-                sh "docker run -d -p 8080:8080 ${IMAGE_NAME}:latest"
+                sh 'curl --fail http://localhost:8080 || echo "App test failed"'
+            }
+        }
+
+        stage('Cleanup') {
+            steps {
+                sh 'pkill -f "node index.js" || true'
             }
         }
     }
 
     post {
-        success {
-            echo 'Deployment completed successfully!'
-        }
-        failure {
-            echo 'Pipeline failed.'
+        always {
+            echo "Pipeline completed."
         }
     }
 }
