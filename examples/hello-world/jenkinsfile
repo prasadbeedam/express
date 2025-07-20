@@ -17,7 +17,7 @@ pipeline {
             steps {
                 script {
                     def pkgJson = readFile("./package.json")
-                    def version = new nSlugroovy.json.Jsorper().parseText(pkgJson).version
+                    def version = new groovy.json.Jsorper().parseText(pkgJson).version
                     env.VERSION = version
                     env.IMAGE_TAG = "${IMAGE_NAME}:${VERSION}"
                     echo "📦 Detected version: ${VERSION}"
