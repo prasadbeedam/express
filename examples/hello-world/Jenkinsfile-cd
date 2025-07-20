@@ -31,7 +31,7 @@ pipeline {
             steps {
                 dir("${APP_DIR}") {
                     script {
-                        def imageTag = "${IMAGE_NAME}:${APP_VERSION}"
+                        def imageTag = "${IMAGE_NAME}:${env.APP_VERSION}"
                         echo "🛠 Updating deployment.yaml with image: ${imageTag}"
 
                         sh """
@@ -46,11 +46,14 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 dir("${APP_DIR}") {
-                    sh "git checkout main"
-                    sh "ls -ltr"
-                    sh "kubectl version --client"
-                    echo "🚀 Deploying to namespace ${NAMESPACE}"
-                    sh "kubectl apply -n ${NAMESPACE} -f deployment.yaml"
+                    script {
+                        echo "🚀 Deploying to namespace ${env.NAMESPACE}"
+                        sh """
+                            export KUBECONFIG=/home/ec2-user/.kube/config
+                            kubectl version --client
+                            kubectl apply -n ${env.NAMESPACE} -f deployment.yaml
+                        """
+                    }
                 }
             }
         }
