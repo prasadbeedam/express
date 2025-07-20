@@ -45,15 +45,45 @@ pipeline {
             }
         }
 
-        stage('Print Image & Update deployment.yaml') {
+        stage('Build Docker Image') {
             steps {
                 dir("${APP_DIR}") {
-                    echo "🖨️ Docker image to deploy: ${env.FULL_IMAGE_NAME}"
+                    sh "docker build -t ${FULL_IMAGE_NAME} ."
+                }
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                dir("${APP_DIR}") {
+                    echo "📤 Pushing image: ${FULL_IMAGE_NAME}"
                     sh '''
-                        echo "🔧 Updating deployment.yaml with new image..."
+                        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKERHUB_USER" --password-stdin
+                        docker push ${FULL_IMAGE_NAME}
+                    '''
+                }
+            }
+        }
+
+        stage('Update deployment.yaml with Image') {
+            steps {
+                dir("${APP_DIR}") {
+                    echo "🔧 Updating deployment.yaml with image: ${FULL_IMAGE_NAME}"
+                    sh '''
                         sed -i "s|image: .*|image: ${FULL_IMAGE_NAME}|" deployment.yaml
                         echo "✅ Updated deployment.yaml:"
                         cat deployment.yaml
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy to EKS') {
+            steps {
+                dir("${APP_DIR}") {
+                    echo "🚀 Deploying to EKS (namespace: hello-world)"
+                    sh '''
+                        kubectl apply -n hello-world -f deployment.yaml
                     '''
                 }
             }
