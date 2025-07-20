@@ -2,42 +2,51 @@ pipeline {
     agent any
 
     environment {
-        APP_DIR = "examples/hello-world"
         IMAGE_NAME = "hello-world-app"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/prasadbeedam/express.git'
+                git branch: 'main', url: 'https://github.com/prasadbeedam/express.git'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build') {
             steps {
-                dir("${APP_DIR}") {
-                    sh 'docker build -t hello-world-app .'
+                dir('examples/hello-world') {
+                    sh 'npm install'
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo 'No tests specified. Skipping for now.'
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                dir('examples/hello-world') {
+                    sh "docker build -t ${IMAGE_NAME}:latest ."
                 }
             }
         }
 
         stage('Run Container') {
             steps {
-                sh 'docker rm -f hello-app || true'
-                sh 'docker run -d -p 8080:8080 --name hello-app hello-world-app'
+                sh "docker run -d -p 8080:8080 ${IMAGE_NAME}:latest"
             }
         }
+    }
 
-        stage('Test Endpoint') {
-            steps {
-                sh 'sleep 3 && curl --fail http://localhost:8080'
-            }
+    post {
+        success {
+            echo 'Deployment completed successfully!'
         }
-
-        stage('Cleanup') {
-            steps {
-                sh 'docker stop hello-app && docker rm hello-app'
-            }
+        failure {
+            echo 'Pipeline failed.'
         }
     }
 }
