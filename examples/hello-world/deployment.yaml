@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: hello-world
-        image: placeholder-image  # This will be replaced in the pipeline
+        image: prasadyadav99/hello-world-app:latest # 🔁 This will be updated by Jenkins
         ports:
         - containerPort: 8080
 ---
@@ -29,6 +29,5 @@ spec:
   selector:
     app: hello-world
   ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 8080
+  - port: 80
+    targetPort: 8080
