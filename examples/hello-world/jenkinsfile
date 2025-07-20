@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        APP_DIR = "examples/hello-world"
         IMAGE_NAME = "hello-world-app"
     }
 
@@ -15,23 +14,19 @@ pipeline {
 
         stage('Read the Version') {
             steps {
-                dir("${APP_DIR}") {
-                    script {
-                        def packageJson = readJSON file: 'package.json'
-                        def appVersion = packageJson.version
-                        env.IMAGE_TAG = "${IMAGE_NAME}:${appVersion}"
-                        echo "📦 Application version: ${appVersion}"
-                        echo "📸 Docker Image Tag: ${IMAGE_TAG}"
-                    }
+                script {
+                    def packageJson = readJSON file: 'package.json'
+                    def appVersion = packageJson.version
+                    env.IMAGE_TAG = "${IMAGE_NAME}:${appVersion}"
+                    echo "📦 App version: ${appVersion}"
+                    echo "📸 Docker Image Tag: ${IMAGE_TAG}"
                 }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                dir("${APP_DIR}") {
-                    sh "docker build -t ${IMAGE_TAG} ."
-                }
+                sh "docker build -t ${IMAGE_TAG} ."
             }
         }
 
@@ -45,7 +40,7 @@ pipeline {
         stage('Test Endpoint') {
             steps {
                 script {
-                    sleep(time: 5, unit: 'SECONDS') // Wait for the app to start
+                    sleep(time: 5, unit: 'SECONDS')
                     def response = sh(script: "curl -s http://localhost:8080", returnStdout: true).trim()
                     if (response == 'Hello World') {
                         echo "✅ Test passed: ${response}"
