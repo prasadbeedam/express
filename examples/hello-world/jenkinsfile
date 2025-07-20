@@ -32,9 +32,7 @@ pipeline {
                         def appVersion = packageJson.version
                         echo "📦 Application version: ${appVersion}"
 
-                        // Save it to a global variable using currentBuild
                         currentBuild.displayName = "v${appVersion}"
-                        // Save to env manually
                         env.IMAGE_TAG = "${IMAGE_NAME}:${appVersion}"
                     }
                 }
@@ -60,6 +58,14 @@ pipeline {
             steps {
                 echo "🚀 Deploying image: ${env.IMAGE_TAG}"
             }
+        }
+    }
+
+    post {
+        success {
+            echo "🧹 Cleaning up workspace..."
+            // Remove the application directory
+            sh "rm -rf ${APP_DIR}"
         }
     }
 }
