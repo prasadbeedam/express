@@ -1,0 +1,48 @@
+pipeline {
+    agent {
+        label 'AGENT-1'
+    }
+
+    environment {
+        APP_DIR = "examples/hello-world"
+        IMAGE_NAME = "hello-world-app"
+        DOCKERHUB_USER = "prasadyadav99"
+    }
+
+    parameters {
+        string(name: 'VERSION', defaultValue: '', description: 'Docker image version to deploy')
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/prasadbeedam/express.git'
+                sh "git checkout main"
+            }
+        }
+
+        stage('List Files in hello-world') {
+            steps {
+                dir("${APP_DIR}") {
+                    sh "ls -ltr"
+                }
+            }
+        }
+
+        stage('Read the Version') {
+            steps {
+                dir("${APP_DIR}") {
+                    script {
+                        def packageJson = readJSON file: 'package.json'
+                        def appVersion = packageJson.version
+                        echo "📦 Application version: ${appVersion}"
+
+                        currentBuild.displayName = "v${appVersion}"
+                        env.IMAGE_TAG = "${IMAGE_NAME}:${appVersion}"
+                        env.FULL_IMAGE_NAME = "${DOCKERHUB_USER}/${IMAGE_NAME}:${appVersion}"
+                    }
+                }
+            }
+        }
+    }
+}
