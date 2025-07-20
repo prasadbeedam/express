@@ -2,28 +2,31 @@ pipeline {
     agent {
         label 'AGENT-1'
     }
-  stages {
-    stage('checkout') {
-      steps {
-        git 'https://github.com/prasadbeedam/express.git'
-        sh "ls -ltr"
-      }
-    }  
-  stages {
-    stage('Build') {
-      steps {
-        echo 'Building...'
-      }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/prasadbeedam/express.git'
+                sh "ls -ltr"
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo 'Building...'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo 'Testing...'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo 'Deploying...'
+            }
+        }
     }
-    stage('Test') {
-      steps {
-        echo 'Testing...'
-      }
-    }
-    stage('Deploy') {
-      steps {
-        echo 'Deploying...'
-      }
-    }
-  }
 }
