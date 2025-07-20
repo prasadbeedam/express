@@ -51,7 +51,7 @@ pipeline {
         stage('Run Container for Testing') {
             steps {
                 echo "🚀 Running container from image: ${env.IMAGE_TAG}"
-                sh "docker run -d --name test_container -p 3000:3000 ${env.IMAGE_TAG}"
+                sh "docker run -d --name test_container -p 8080:8080 ${env.IMAGE_TAG}"
             }
         }
 
@@ -60,7 +60,7 @@ pipeline {
                 echo '🔍 Running health check...'
                 sh '''
                     sleep 5
-                    curl -f http://localhost:3000 || exit 1
+                    curl -f http://localhost:8080 || exit 1
                 '''
             }
         }
