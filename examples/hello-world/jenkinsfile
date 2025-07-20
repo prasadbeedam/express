@@ -12,6 +12,7 @@ pipeline {
             steps {
                 git 'https://github.com/prasadbeedam/express.git'
                 sh "ls -ltr"
+                sh "git checkout main"
             }
         }
 
