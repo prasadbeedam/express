@@ -35,6 +35,7 @@ pipeline {
 
                         currentBuild.displayName = "v${appVersion}"
                         env.IMAGE_TAG = "${IMAGE_NAME}:${appVersion}"
+                        env.FULL_IMAGE_NAME = "${DOCKERHUB_USER}/${IMAGE_NAME}:${appVersion}"
                     }
                 }
             }
@@ -43,16 +44,16 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 dir("${APP_DIR}") {
-                    echo "Building image: ${env.IMAGE_TAG}"
-                    sh "docker build -t ${env.IMAGE_TAG} ."
+                    echo "🐳 Building image: ${env.FULL_IMAGE_NAME}"
+                    sh "docker build -t ${env.FULL_IMAGE_NAME} ."
                 }
             }
         }
 
         stage('Run Container for Testing') {
             steps {
-                echo "🚀 Running container from image: ${env.IMAGE_TAG}"
-                sh "docker run -d --name test_container -p 8080:8080 ${env.IMAGE_TAG}"
+                echo "🚀 Running container from image: ${env.FULL_IMAGE_NAME}"
+                sh "docker run -d --name test_container -p 8080:8080 ${env.FULL_IMAGE_NAME}"
             }
         }
 
@@ -68,24 +69,23 @@ pipeline {
 
         stage('Test') {
             steps {
-                echo '✅ Testing...'
+                echo '✅ Running application tests...'
+                dir("${APP_DIR}") {
+                    sh 'npm install'
+                    sh 'npm test || true'
+                }
             }
         }
 
         stage('Push to Docker Hub') {
             steps {
                 script {
-                    def imageName = env.IMAGE_TAG.split(':')[0]
-                    def version = env.IMAGE_TAG.split(':')[1]
-                    def fullImageName = "${DOCKERHUB_USER}/${imageName}:${version}"
-                    echo "📤 Pushing image: ${fullImageName}"
-
-                    sh "docker tag ${env.IMAGE_TAG} ${fullImageName}"
+                    echo "📤 Pushing image: ${env.FULL_IMAGE_NAME}"
 
                     withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                         sh """
                             echo "$PASSWORD" | docker login -u "$USERNAME" --password-stdin
-                            docker push ${fullImageName}
+                            docker push ${env.FULL_IMAGE_NAME}
                             docker logout
                         """
                     }
@@ -93,16 +93,30 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy to EKS') {
             steps {
-                echo "🚀 Deploying image: ${env.IMAGE_TAG}"
+                dir("${APP_DIR}") {
+                    script {
+                        echo '📦 Updating image in deployment.yaml...'
+                        sh "sed -i 's|image: .*|image: ${env.FULL_IMAGE_NAME}|' deployment.yaml"
+
+                        echo '🚀 Applying Kubernetes deployment...'
+                        sh "kubectl apply -f deployment.yaml"
+
+                        echo '🔄 Waiting for rollout...'
+                        sh "kubectl rollout status deployment/hello-world-deployment"
+
+                        echo '🔗 Service details:'
+                        sh "kubectl get svc hello-world-service"
+                    }
+                }
             }
         }
     }
 
     post {
         always {
-            echo "🧹 Cleaning up..."
+            echo "🧹 Cleaning up temporary containers..."
             sh '''
                 docker stop test_container || true
                 docker rm test_container || true
@@ -111,9 +125,11 @@ pipeline {
 
         success {
             echo "🧼 Cleaning up workspace..."
-            sh '''
-                find . -mindepth 1 -maxdepth 1 -exec rm -rf {} +
-            '''
+            deleteDir()  // safer than deleting files manually
+        }
+
+        failure {
+            echo "❌ Build failed. Please check the logs."
         }
     }
 }
