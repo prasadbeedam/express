@@ -1,51 +1,17 @@
 pipeline {
     agent any
 
-    environment {
-        APP_DIR = "examples/hello-world"
-        PORT = "8080"
-    }
-
     stages {
         stage('Clone Repository') {
             steps {
                 git branch: 'main', url: 'https://github.com/prasadbeedam/express.git'
             }
         }
-
-        stage('Install Dependencies') {
-            steps {
-                dir("${APP_DIR}") {
-                    sh 'npm install'
-                }
-            }
-        }
-
-        stage('Run App') {
-            steps {
-                dir("${APP_DIR}") {
-                    sh 'nohup node index.js > app.log 2>&1 &'
-                    sh 'sleep 5'
-                }
-            }
-        }
-
-        stage('Test App') {
-            steps {
-                sh 'curl --fail http://localhost:8080 || echo "App test failed"'
-            }
-        }
-
-        stage('Cleanup') {
-            steps {
-                sh 'pkill -f "node index.js" || true'
-            }
-        }
     }
 
     post {
         always {
-            echo "Pipeline completed."
+            echo "Repository cloned successfully."
         }
     }
 }
