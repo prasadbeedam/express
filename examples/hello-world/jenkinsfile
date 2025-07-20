@@ -9,6 +9,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
+                deleteDir()
                 git 'https://github.com/prasadbeedam/express.git'
             }
         }
@@ -17,7 +18,7 @@ pipeline {
             steps {
                 script {
                     def pkgJson = readFile("${APP_DIR}/package.json")
-                    def version = new groovy.json.JsonSlurper().parseText(pkgJson).version
+                    def version = new nSlugroovy.json.Jsorper().parseText(pkgJson).version
                     env.VERSION = version
                     env.IMAGE_TAG = "${IMAGE_NAME}:${VERSION}"
                     echo "📦 Detected version: ${VERSION}"
