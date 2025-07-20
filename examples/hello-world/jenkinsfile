@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        APP_DIR = "examples/hello-world"
+        APP_DIR = "."
         IMAGE_NAME = "hello-world-app"
     }
 
