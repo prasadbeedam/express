@@ -1,5 +1,9 @@
 # CI/CD Automation for Hello World App
 
+# Project Overview
+![alt text](project.png)
+
+
 ## Overview
 
 This project automates the build, test, and deployment process of a simple Node.js “Hello World” application using a CI/CD pipeline. Whenever a developer pushes code to the main branch in GitHub, the following steps are triggered automatically:
