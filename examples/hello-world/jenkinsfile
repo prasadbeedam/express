@@ -8,8 +8,14 @@ pipeline {
             steps {
                 git 'https://github.com/prasadbeedam/express.git'
                 sh "ls -ltr"
-                cd "examples/hello-world"
-                sh "ls -ltr"
+            }
+        }
+
+        stage('List Files in hello-world') {
+            steps {
+                dir('examples/hello-world') {
+                    sh "ls -ltr"
+                }
             }
         }
 
