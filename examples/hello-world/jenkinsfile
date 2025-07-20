@@ -65,7 +65,7 @@ pipeline {
         success {
             echo "🧹 Cleaning up workspace..."
             // Remove the application directory
-            sh "rm -rf ${APP_DIR}"
+            sh "rm -rf * .*"
         }
     }
 }
