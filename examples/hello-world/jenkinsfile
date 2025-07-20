@@ -5,13 +5,14 @@ pipeline {
 
     environment {
         APP_DIR = "examples/hello-world"
+        IMAGE_NAME = "hello-world-app"
+        IMAGE_TAG = "" // Will be dynamically set later
     }
 
     stages {
         stage('Checkout') {
             steps {
                 git 'https://github.com/prasadbeedam/express.git'
-                sh "ls -ltr"
                 sh "git checkout main"
             }
         }
@@ -31,14 +32,18 @@ pipeline {
                         def packageJson = readJSON file: 'package.json'
                         def appVersion = packageJson.version
                         echo "📦 Application version: ${appVersion}"
+                        env.IMAGE_TAG = "${IMAGE_NAME}:${appVersion}"
+                        echo "🔖 Image tag: ${env.IMAGE_TAG}"
                     }
                 }
             }
         }
 
-        stage('Build') {
+        stage('Build Docker Image') {
             steps {
-                echo '🔧 Building...'
+                dir("${APP_DIR}") {
+                    sh "docker build -t ${env.IMAGE_TAG} ."
+                }
             }
         }
 
@@ -50,7 +55,7 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                echo '🚀 Deploying...'
+                echo "🚀 Deploying image: ${env.IMAGE_TAG}"
             }
         }
     }
