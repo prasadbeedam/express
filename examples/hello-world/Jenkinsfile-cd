@@ -1,16 +1,10 @@
 pipeline {
-    agent {
-        label 'AGENT-1'
-    }
+    agent any
 
     environment {
         APP_DIR = "examples/hello-world"
-        IMAGE_NAME = "hello-world-app"
-        DOCKERHUB_USER = "prasadyadav99"
-    }
-
-    parameters {
-        string(name: 'VERSION', defaultValue: '', description: 'Docker image version to deploy')
+        IMAGE_NAME = "prasadyadav99/hello-world-app"
+        NAMESPACE = "hello-world"
     }
 
     stages {
@@ -21,46 +15,14 @@ pipeline {
             }
         }
 
-        stage('List Files in hello-world') {
-            steps {
-                dir("${APP_DIR}") {
-                    sh "ls -ltr"
-                }
-            }
-        }
-
-        stage('Read the Version') {
+        stage('Read Version from package.json') {
             steps {
                 dir("${APP_DIR}") {
                     script {
-                        def packageJson = readJSON file: 'package.json'
-                        def appVersion = packageJson.version
-                        echo "📦 Application version: ${appVersion}"
-
-                        currentBuild.displayName = "v${appVersion}"
-                        env.IMAGE_TAG = "${IMAGE_NAME}:${appVersion}"
-                        env.FULL_IMAGE_NAME = "${DOCKERHUB_USER}/${IMAGE_NAME}:${appVersion}"
+                        def pkg = readJSON file: 'package.json'
+                        env.APP_VERSION = pkg.version
+                        echo "📦 Application version: ${env.APP_VERSION}"
                     }
-                }
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                dir("${APP_DIR}") {
-                    sh "docker build -t ${FULL_IMAGE_NAME} ."
-                }
-            }
-        }
-
-        stage('Push to Docker Hub') {
-            steps {
-                dir("${APP_DIR}") {
-                    echo "📤 Pushing image: ${FULL_IMAGE_NAME}"
-                    sh '''
-                        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKERHUB_USER" --password-stdin
-                        docker push ${FULL_IMAGE_NAME}
-                    '''
                 }
             }
         }
@@ -68,23 +30,24 @@ pipeline {
         stage('Update deployment.yaml with Image') {
             steps {
                 dir("${APP_DIR}") {
-                    echo "🔧 Updating deployment.yaml with image: ${FULL_IMAGE_NAME}"
-                    sh '''
-                        sed -i "s|image: .*|image: ${FULL_IMAGE_NAME}|" deployment.yaml
-                        echo "✅ Updated deployment.yaml:"
+                    script {
+                        def imageTag = "${IMAGE_NAME}:${APP_VERSION}"
+                        echo "🛠 Updating deployment.yaml with image: ${imageTag}"
+
+                        sh """
+                        sed -i 's|image: .*|image: ${imageTag}|' deployment.yaml
                         cat deployment.yaml
-                    '''
+                        """
+                    }
                 }
             }
         }
 
-        stage('Deploy to EKS') {
+        stage('Deploy to Kubernetes') {
             steps {
                 dir("${APP_DIR}") {
-                    echo "🚀 Deploying to EKS (namespace: hello-world)"
-                    sh '''
-                        kubectl apply -n hello-world -f deployment.yaml
-                    '''
+                    echo "🚀 Deploying to namespace ${NAMESPACE}"
+                    sh "kubectl apply -n ${NAMESPACE} -f deployment.yaml"
                 }
             }
         }
