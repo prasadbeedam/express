@@ -1,7 +1,5 @@
 pipeline {
-    agent {
-        label 'AGENT-1'
-    }
+    agent any
 
     environment {
         APP_DIR = "examples/hello-world"
@@ -12,18 +10,19 @@ pipeline {
         stage('Checkout') {
             steps {
                 git 'https://github.com/prasadbeedam/express.git'
-                sh "ls -ltr"
             }
         }
 
         stage('Read the Version') {
             steps {
-                script {
-                    def packageJson = readJSON file: "${APP_DIR}/package.json"
-                    env.APP_VERSION = packageJson.version
-                    env.IMAGE_TAG = "${IMAGE_NAME}:${env.APP_VERSION}"
-                    echo "📦 Detected version: ${env.APP_VERSION}"
-                    echo "📸 Docker Image Tag: ${env.IMAGE_TAG}"
+                dir("${APP_DIR}") {
+                    script {
+                        def packageJson = readJSON file: 'package.json'
+                        def appVersion = packageJson.version
+                        env.IMAGE_TAG = "${IMAGE_NAME}:${appVersion}"
+                        echo "📦 Application version: ${appVersion}"
+                        echo "📸 Docker Image Tag: ${IMAGE_TAG}"
+                    }
                 }
             }
         }
@@ -38,24 +37,36 @@ pipeline {
 
         stage('Run Container') {
             steps {
-                sh "docker rm -f hello-app || true"
-                sh "docker run -d -p 8080:8080 --name hello-app ${IMAGE_TAG}"
+                sh "docker rm -f hello-world-container || true"
+                sh "docker run -d -p 8080:8080 --name hello-world-container ${IMAGE_TAG}"
             }
         }
 
         stage('Test Endpoint') {
             steps {
-                sh "sleep 3 && curl --fail http://localhost:8080"
+                script {
+                    sleep(time: 5, unit: 'SECONDS') // Wait for the app to start
+                    def response = sh(script: "curl -s http://localhost:8080", returnStdout: true).trim()
+                    if (response == 'Hello World') {
+                        echo "✅ Test passed: ${response}"
+                    } else {
+                        error("❌ Test failed: Unexpected response '${response}'")
+                    }
+                }
             }
         }
     }
 
     post {
+        always {
+            echo '🧹 Cleaning up container...'
+            sh 'docker rm -f hello-world-container || true'
+        }
         success {
-            echo "✅ Successfully built and tagged image: ${IMAGE_TAG}"
+            echo '🎉 Pipeline completed successfully!'
         }
         failure {
-            echo "❌ Pipeline failed. Check logs above."
+            echo '❌ Pipeline failed. Please check the logs above.'
         }
     }
 }
