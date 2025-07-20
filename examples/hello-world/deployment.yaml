@@ -2,8 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hello-world-deployment
-  labels:
-    app: hello-world
 spec:
   replicas: 2
   selector:
@@ -15,8 +13,8 @@ spec:
         app: hello-world
     spec:
       containers:
-      - name: hello-world
-        image: prasadyadav99/hello-world-app:latest # 🔁 This will be updated by Jenkins
+      - name: hello-world-container
+        image: prasadyadav99/hello-world-app:1.0.0   # ← Jenkins will update this
         ports:
         - containerPort: 8080
 ---
@@ -29,5 +27,6 @@ spec:
   selector:
     app: hello-world
   ports:
-  - port: 80
-    targetPort: 8080
+    - protocol: TCP
+      port: 80
+      targetPort: 8080

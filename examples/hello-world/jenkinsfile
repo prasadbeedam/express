@@ -89,6 +89,8 @@ pipeline {
                             docker logout
                         """
                     }
+
+                    echo "✅ Image pushed: ${env.FULL_IMAGE_NAME}"
                 }
             }
         }
@@ -97,16 +99,16 @@ pipeline {
             steps {
                 dir("${APP_DIR}") {
                     script {
-                        echo '📦 Updating image in deployment.yaml...'
+                        echo "📄 Updating image in deployment.yaml..."
                         sh "sed -i 's|image: .*|image: ${env.FULL_IMAGE_NAME}|' deployment.yaml"
 
-                        echo '🚀 Applying Kubernetes deployment...'
+                        echo '🚀 Deploying to EKS...'
                         sh "kubectl apply -f deployment.yaml"
 
                         echo '🔄 Waiting for rollout...'
                         sh "kubectl rollout status deployment/hello-world-deployment"
 
-                        echo '🔗 Service details:'
+                        echo '🔗 Service Details:'
                         sh "kubectl get svc hello-world-service"
                     }
                 }
@@ -125,7 +127,7 @@ pipeline {
 
         success {
             echo "🧼 Cleaning up workspace..."
-            deleteDir()  // safer than deleting files manually
+            deleteDir()
         }
 
         failure {
