@@ -48,6 +48,23 @@ pipeline {
             }
         }
 
+        stage('Run Container for Testing') {
+            steps {
+                echo "🚀 Running container from image: ${env.IMAGE_TAG}"
+                sh "docker run -d --name test_container -p 3000:3000 ${env.IMAGE_TAG}"
+            }
+        }
+
+        stage('Health Check Test') {
+            steps {
+                echo '🔍 Running health check...'
+                sh '''
+                    sleep 5
+                    curl -f http://localhost:3000 || exit 1
+                '''
+            }
+        }
+
         stage('Test') {
             steps {
                 echo '✅ Testing...'
@@ -62,8 +79,16 @@ pipeline {
     }
 
     post {
+        always {
+            echo "🧹 Cleaning up..."
+            sh '''
+                docker stop test_container || true
+                docker rm test_container || true
+            '''
+        }
+
         success {
-            echo "🧹 Cleaning up workspace..."
+            echo "🧼 Cleaning up workspace..."
             sh '''
                 find . -mindepth 1 -maxdepth 1 -exec rm -rf {} +
             '''
