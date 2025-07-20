@@ -3,6 +3,10 @@ pipeline {
         label 'AGENT-1'
     }
 
+    parameters {
+        string(name: 'APP_VERSION', defaultValue: '', description: 'Version to deploy (e.g. 1.0.0)')
+    }
+
     environment {
         APP_DIR = "examples/hello-world"
         IMAGE_NAME = "prasadyadav99/hello-world-app"
@@ -18,34 +22,32 @@ pipeline {
             }
         }
 
-        stage('Read Version from package.json') {
+        stage('Deploy to Kubernetes') {
             steps {
                 dir("${APP_DIR}") {
                     script {
-                        def pkg = readJSON file: 'package.json'
-                        env.APP_VERSION = pkg.version
-                        echo "📦 Application version: ${env.APP_VERSION}"
-                    }
-                }
-            }
-        }
+                        def imageTag = "${IMAGE_NAME}:${params.APP_VERSION}"
+                        echo "🚀 Deploying image: ${imageTag}"
 
-        stage('Update deployment.yaml with Image & Deploy') {
-            steps {
-                dir("${APP_DIR}") {
-                    script {
-                        def imageTag = "${IMAGE_NAME}:${env.APP_VERSION}"
-                        echo "🛠 Updating deployment.yaml with image: ${imageTag}"
                         sh """
                             sed -i 's|image: .*|image: ${imageTag}|' deployment.yaml
                             cat deployment.yaml
-                            export KUBECONFIG=/home/ec2-user/.kube/config
+                            export KUBECONFIG=${KUBECONFIG}
                             kubectl version --client
-                            kubectl apply -n ${env.NAMESPACE} -f deployment.yaml
+                            kubectl apply -n ${NAMESPACE} -f deployment.yaml
                         """
                     }
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Deployment succeeded for version ${params.APP_VERSION}"
+        }
+        failure {
+            echo "❌ Deployment failed. Please check logs and Kubernetes state."
         }
     }
 }
