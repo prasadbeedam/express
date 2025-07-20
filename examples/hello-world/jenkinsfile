@@ -64,8 +64,9 @@ pipeline {
     post {
         success {
             echo "🧹 Cleaning up workspace..."
-            // Remove the application directory
-            sh "rm -rf * .*"
+            sh '''
+                find . -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+            '''
         }
     }
 }
