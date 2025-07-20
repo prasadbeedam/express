@@ -5,13 +5,14 @@ pipeline {
         APP_DIR = "examples/hello-world"
         IMAGE_NAME = "prasadyadav99/hello-world-app"
         NAMESPACE = "hello-world"
+        KUBECONFIG = "/home/ec2-user/.kube/config"
     }
 
     stages {
         stage('Checkout') {
             steps {
                 git 'https://github.com/prasadbeedam/express.git'
-                sh "git checkout main"
+                sh 'git checkout main'
             }
         }
 
@@ -27,31 +28,18 @@ pipeline {
             }
         }
 
-        stage('Update deployment.yaml with Image') {
+        stage('Update deployment.yaml with Image & Deploy') {
             steps {
                 dir("${APP_DIR}") {
                     script {
                         def imageTag = "${IMAGE_NAME}:${env.APP_VERSION}"
                         echo "🛠 Updating deployment.yaml with image: ${imageTag}"
-
                         sh """
-                        sed -i 's|image: .*|image: ${imageTag}|' deployment.yaml
-                        cat deployment.yaml
-                        """
-                    }
-                }
-            }
-        }
-
-        stage('Deploy to Kubernetes') {
-            steps {
-                dir("${APP_DIR}") {
-                    script {
-                        echo "🚀 Deploying to namespace ${env.NAMESPACE}"
-                        sh """
-                            export KUBECONFIG=/home/ec2-user/.kube/config
+                            sed -i 's|image: .*|image: ${imageTag}|' deployment.yaml
+                            cat deployment.yaml
+                            export KUBECONFIG=${KUBECONFIG}
                             kubectl version --client
-                            kubectl apply -n ${env.NAMESPACE} -f deployment.yaml
+                            kubectl apply -n ${NAMESPACE} -f deployment.yaml
                         """
                     }
                 }
