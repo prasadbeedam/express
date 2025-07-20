@@ -1,49 +1,20 @@
 pipeline {
-    agent any
-
-    environment {
-        APP_NAME = 'express-app'
-        IMAGE_NAME = 'express-app:latest'
+  agent any
+  stages {
+    stage('Build') {
+      steps {
+        echo 'Building...'
+      }
     }
-
-    stages {
-        stage('Checkout') {
-            steps {
-                git branch: 'main', url: 'https://github.com/prasadbeedam/express.git'
-            }
-        }
-
-        stage('Install Dependencies') {
-            steps {
-                dir('examples/hello-world') {
-                    sh 'npm install'
-                }
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                dir('examples/hello-world') {
-                    sh 'docker compose build'
-                }
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                dir('examples/hello-world') {
-                    sh 'docker compose down && docker compose up -d'
-                }
-            }
-        }
+    stage('Test') {
+      steps {
+        echo 'Testing...'
+      }
     }
-
-    post {
-        success {
-            echo '✅ Deployment successful!'
-        }
-        failure {
-            echo '❌ Build or deployment failed.'
-        }
+    stage('Deploy') {
+      steps {
+        echo 'Deploying...'
+      }
     }
+  }
 }
