@@ -96,3 +96,23 @@ The updated application is deployed into the `hello-world` namespace.
 
 This project delivers a complete CI/CD solution using open-source tools and cloud infrastructure. The entire process — from code commit to deployment — is fully automated, enabling rapid delivery, consistency, and reduced manual overhead.
 
+## Servers
+
+![alt text](servers.png)
+
+
+## Cluster
+
+![alt text](cluster.png)
+
+
+## Summary
+
+
+
+## Summary
+
+
+
+
+
