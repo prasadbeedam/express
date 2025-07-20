@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  express-app:
+    build:
+      context: ./examples/hello-world
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./examples/hello-world:/app
+      - /app/node_modules
+    command: npm start
