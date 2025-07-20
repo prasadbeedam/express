@@ -1,10 +1,49 @@
 pipeline {
     agent any
+
+    environment {
+        APP_NAME = 'express-app'
+        IMAGE_NAME = 'express-app:latest'
+    }
+
     stages {
-        stage('Clone') {
+        stage('Checkout') {
             steps {
-                echo 'Cloning repo and executing pipeline...'
+                git branch: 'main', url: 'https://github.com/prasadbeedam/express.git'
             }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                dir('examples/hello-world') {
+                    sh 'npm install'
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                dir('examples/hello-world') {
+                    sh 'docker compose build'
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                dir('examples/hello-world') {
+                    sh 'docker compose down && docker compose up -d'
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Deployment successful!'
+        }
+        failure {
+            echo '❌ Build or deployment failed.'
         }
     }
 }
