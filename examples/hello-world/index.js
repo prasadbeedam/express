@@ -5,7 +5,7 @@ var express = require('express');
 var app = module.exports = express();
 
 app.get('/', function(req, res){
-  res.send('Hello World from version 5 ');
+  res.send('Hello World from version 6 ');
 });
 
 /* istanbul ignore next */
