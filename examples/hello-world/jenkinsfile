@@ -6,6 +6,7 @@ pipeline {
     environment {
         APP_DIR = "examples/hello-world"
         IMAGE_NAME = "hello-world-app"
+        DOCKERHUB_USER = "prasadyadav99"
     }
 
     stages {
@@ -68,6 +69,27 @@ pipeline {
         stage('Test') {
             steps {
                 echo '✅ Testing...'
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                script {
+                    def imageName = env.IMAGE_TAG.split(':')[0]
+                    def version = env.IMAGE_TAG.split(':')[1]
+                    def fullImageName = "${DOCKERHUB_USER}/${imageName}:${version}"
+                    echo "📤 Pushing image: ${fullImageName}"
+
+                    sh "docker tag ${env.IMAGE_TAG} ${fullImageName}"
+
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                        sh """
+                            echo "$PASSWORD" | docker login -u "$USERNAME" --password-stdin
+                            docker push ${fullImageName}
+                            docker logout
+                        """
+                    }
+                }
             }
         }
 
