@@ -12,22 +12,26 @@ pipeline {
         stage('Checkout') {
             steps {
                 git 'https://github.com/prasadbeedam/express.git'
-                sh  "ls -ltr"
+                sh "ls -ltr"
             }
         }
-        stage('read the version'){
-            steps{
-                script{
-                    def packageJson = readJSON file: 'package.json'
-                    appVersion = packageJson.version
-                    echo "application version: $appVersion"
+
+        stage('Read the Version') {
+            steps {
+                script {
+                    def packageJson = readJSON file: "${APP_DIR}/package.json"
+                    env.APP_VERSION = packageJson.version
+                    env.IMAGE_TAG = "${IMAGE_NAME}:${env.APP_VERSION}"
+                    echo "📦 Detected version: ${env.APP_VERSION}"
+                    echo "📸 Docker Image Tag: ${env.IMAGE_TAG}"
                 }
             }
         }
+
         stage('Build Docker Image') {
             steps {
                 dir("${APP_DIR}") {
-                    sh "docker build -t $IMAGE_TAG ."
+                    sh "docker build -t ${IMAGE_TAG} ."
                 }
             }
         }
@@ -35,7 +39,7 @@ pipeline {
         stage('Run Container') {
             steps {
                 sh "docker rm -f hello-app || true"
-                sh "docker run -d -p 8080:8080 --name hello-app $IMAGE_TAG"
+                sh "docker run -d -p 8080:8080 --name hello-app ${IMAGE_TAG}"
             }
         }
 
@@ -48,7 +52,7 @@ pipeline {
 
     post {
         success {
-            echo "✅ Successfully built and tagged image: $IMAGE_TAG"
+            echo "✅ Successfully built and tagged image: ${IMAGE_TAG}"
         }
         failure {
             echo "❌ Pipeline failed. Check logs above."
