@@ -96,6 +96,24 @@ The updated application is deployed into the `hello-world` namespace.
 
 This project delivers a complete CI/CD solution using open-source tools and cloud infrastructure. The entire process — from code commit to deployment — is fully automated, enabling rapid delivery, consistency, and reduced manual overhead.
 
+## rollback strategies 
+
+using Helm is a very powerful and professional way to manage deployments, including versioning, rollbacks, templating, and parameterization.
+
+## Why Use Helm?
+
+Helm is the Kubernetes package manager that helps define, install, and upgrade applications using charts. It simplifies complex deployments and enables:
+
+Templated Kubernetes YAMLs
+
+Version-controlled releases
+
+Rollback to previous stable versions
+
+Environment-specific configuration management
+
+
+
 ## Servers
 
 ![alt text](servers.png)
