@@ -44,5 +44,19 @@ pipeline {
                 }
             }
         }
+
+        stage('Print Image & Update deployment.yaml') {
+            steps {
+                dir("${APP_DIR}") {
+                    echo "🖨️ Docker image to deploy: ${env.FULL_IMAGE_NAME}"
+                    sh '''
+                        echo "🔧 Updating deployment.yaml with new image..."
+                        sed -i "s|image: .*|image: ${FULL_IMAGE_NAME}|" deployment.yaml
+                        echo "✅ Updated deployment.yaml:"
+                        cat deployment.yaml
+                    '''
+                }
+            }
+        }
     }
 }
