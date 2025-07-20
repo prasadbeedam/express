@@ -3,6 +3,10 @@ pipeline {
         label 'AGENT-1'
     }
 
+    environment {
+        APP_DIR = "examples/hello-world"
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -13,38 +17,39 @@ pipeline {
 
         stage('List Files in hello-world') {
             steps {
-                dir('examples/hello-world') {
-                    sh "git checkout main"
+                dir("${APP_DIR}") {
                     sh "ls -ltr"
                 }
             }
         }
-        stages {
-        stage('read the version'){
-            steps{
-                script{
-                    def packageJson = readJSON file: 'package.json'
-                    appVersion = packageJson.version
-                    echo "application version: $appVersion"
+
+        stage('Read the Version') {
+            steps {
+                dir("${APP_DIR}") {
+                    script {
+                        def packageJson = readJSON file: 'package.json'
+                        def appVersion = packageJson.version
+                        echo "📦 Application version: ${appVersion}"
+                    }
                 }
             }
         }
 
         stage('Build') {
             steps {
-                echo 'Building...'
+                echo '🔧 Building...'
             }
         }
 
         stage('Test') {
             steps {
-                echo 'Testing...'
+                echo '✅ Testing...'
             }
         }
 
         stage('Deploy') {
             steps {
-                echo 'Deploying...'
+                echo '🚀 Deploying...'
             }
         }
     }
