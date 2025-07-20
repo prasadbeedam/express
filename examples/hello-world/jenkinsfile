@@ -1,20 +1,59 @@
 pipeline {
-  agent any
-  stages {
-    stage('Build') {
-      steps {
-        echo 'Building...'
-      }
+    agent any
+
+    environment {
+        APP_DIR = "examples/hello-world"
+        IMAGE_NAME = "hello-world-app"
     }
-    stage('Test') {
-      steps {
-        echo 'Testing...'
-      }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/prasadbeedam/express.git'
+            }
+        }
+
+        stage('Read Version') {
+            steps {
+                script {
+                    def pkgJson = readFile("${APP_DIR}/package.json")
+                    def version = new groovy.json.JsonSlurper().parseText(pkgJson).version
+                    env.VERSION = version
+                    env.IMAGE_TAG = "${IMAGE_NAME}:${VERSION}"
+                    echo "📦 Detected version: ${VERSION}"
+                    echo "📸 Docker Image Tag: ${IMAGE_TAG}"
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                dir("${APP_DIR}") {
+                    sh "docker build -t $IMAGE_TAG ."
+                }
+            }
+        }
+
+        stage('Run Container') {
+            steps {
+                sh "docker rm -f hello-app || true"
+                sh "docker run -d -p 8080:8080 --name hello-app $IMAGE_TAG"
+            }
+        }
+
+        stage('Test Endpoint') {
+            steps {
+                sh "sleep 3 && curl --fail http://localhost:8080"
+            }
+        }
     }
-    stage('Deploy') {
-      steps {
-        echo 'Deploying...'
-      }
+
+    post {
+        success {
+            echo "✅ Successfully built and tagged image: $IMAGE_TAG"
+        }
+        failure {
+            echo "❌ Pipeline failed. Check logs above."
+        }
     }
-  }
 }
