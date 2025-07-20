@@ -46,6 +46,8 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 dir("${APP_DIR}") {
+                    sh "git checkout main"
+                    sh "ls -ltr"
                     echo "🚀 Deploying to namespace ${NAMESPACE}"
                     sh "kubectl apply -n ${NAMESPACE} -f deployment.yaml"
                 }
