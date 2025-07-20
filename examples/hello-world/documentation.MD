@@ -106,11 +106,23 @@ This project delivers a complete CI/CD solution using open-source tools and clou
 ![alt text](cluster.png)
 
 
-## Summary
+## Loadbalancer
+
+![alt text](LB.png)
+
+## helthcheck from web
+
+![alt text](<helthcheck from web.png>)
 
 
+## CI
+![alt text](CI.png)
 
-## Summary
+## CD
+
+![alt text](CD.png)
+
+
 
 
 
