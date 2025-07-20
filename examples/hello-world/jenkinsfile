@@ -8,6 +8,8 @@ pipeline {
             steps {
                 git 'https://github.com/prasadbeedam/express.git'
                 sh "ls -ltr"
+                cd "examples/hello-world"
+                sh "ls -ltr"
             }
         }
 
