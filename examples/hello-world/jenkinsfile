@@ -2,14 +2,13 @@ pipeline {
     agent any
 
     environment {
-        APP_DIR = "."
+        APP_DIR = "examples/hello-world"
         IMAGE_NAME = "hello-world-app"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                deleteDir()
                 git 'https://github.com/prasadbeedam/express.git'
             }
         }
@@ -17,7 +16,7 @@ pipeline {
         stage('Read Version') {
             steps {
                 script {
-                    def pkgJson = readFile("${APP_DIR}/package.json")
+                    def pkgJson = readFile("./package.json")
                     def version = new nSlugroovy.json.Jsorper().parseText(pkgJson).version
                     env.VERSION = version
                     env.IMAGE_TAG = "${IMAGE_NAME}:${VERSION}"
